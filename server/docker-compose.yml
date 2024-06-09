@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_USER=sahil
+      - DATABASE_PASSWORD=sahil101202
+      - DATABASE_NAME=ChatApp
+    volumes:
+      - .:/usr/src/app
+    command: npm run dev
+    restart: always
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: sahil
+      POSTGRES_PASSWORD: sahil101202
+      POSTGRES_DB: ChatApp 
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: sahil@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: sahil101202
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: always
+
+volumes:
+  pgdata:
+  pgadmin_data:
