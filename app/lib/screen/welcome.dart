@@ -78,7 +78,7 @@ class WelcomeScreen extends StatelessWidget {
                     child: FadeInDown(
                       duration: Duration(milliseconds: 2100),
                       child: WelcomeButton(
-                        buttonText: 'Sign in',
+                        buttonText: 'Sign Up',
                         onTap: Signup(),
                         color: Color.fromARGB(5, 0, 0, 0),
                         textColor: Colors.white,
@@ -89,7 +89,7 @@ class WelcomeScreen extends StatelessWidget {
                     child: FadeInRight(
                       duration: Duration(milliseconds: 2200),
                       child: WelcomeButton(
-                        buttonText: 'Sign up',
+                        buttonText: 'Sign In',
                         onTap: login_screen(),
                         color: Colors.white,
                         textColor: lightColorScheme.primary,

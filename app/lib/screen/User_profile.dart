@@ -1,65 +1,118 @@
-import 'package:app/model/profile.dart';
-import 'package:app/server/api/_api_services_auth.dart';
-import 'package:quickalert/quickalert.dart';
-import '../initial_QR_generate.dart';
-
-import '../../main.dart';
-import 'login.dart';
-
-import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:animate_do/animate_do.dart';
+import 'package:app/model/ChatModel.dart';
+import 'package:app/model/profile.dart';
+import 'package:flutter/widgets.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
+import '../main.dart';
+import 'auth/login.dart';
+import 'package:flutter/material.dart';
+import 'package:image_editor_plus/image_editor_plus.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
-class Signup extends StatefulWidget {
+class init_profile extends StatefulWidget {
+  init_profile({
+    required this.info,
+  });
+
+  final profileData info;
+
   @override
-  State<Signup> createState() => _SignupState();
+  State<init_profile> createState() => _init_profileState();
 }
 
-class _SignupState extends State<Signup> {
-  @override
-  String _message = '';
-  final TextEditingController _userIdController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final ApiService_auth _apiService = ApiService_auth();
-  Future<void> _handleSignup() async {
-    final String userId = _userIdController.text;
-    final String password = _passwordController.text;
-    final String email = _emailController.text;
+class _init_profileState extends State<init_profile> {
+  File? _image;
+  late TextEditingController _nameController;
+  late TextEditingController _bioController;
 
-    try {
-      await _apiService.register(userId, password, email);
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.info.name);
+    _bioController = TextEditingController(text: widget.info.bio);
+  }
+
+  String? _profileImageUrl;
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final Uint8List imageBytes = await pickedFile.readAsBytes();
+      final editedImageBytes = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ImageEditor(image: imageBytes),
+        ),
+      );
+      if (editedImageBytes != null) {
+        final tempDir = await getTemporaryDirectory();
+        final tempFile = File('${tempDir.path}/temp_image.png');
+        await tempFile.writeAsBytes(editedImageBytes);
+        setState(() {
+          _image = tempFile;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final uri =
+        Uri.parse('http://10.0.2.2:3000/profile/${widget.info.User_id}');
+    var request = http.MultipartRequest('POST', uri);
+
+    request.fields['user_id'] = widget.info.User_id;
+    request.fields['email'] = widget.info.email;
+    request.fields['user_name'] = _nameController.text;
+    request.fields['bio'] = _bioController.text;
+
+    if (_image != null) {
+      request.files.add(
+          await http.MultipartFile.fromPath('profile_picture', _image!.path));
+    }
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      final responseData = await http.Response.fromStream(response);
+      final Map<String, dynamic> responseJson = json.decode(responseData.body);
+      print('Profile updated: $responseJson');
+
       setState(() {
+        _profileImageUrl = responseJson['profile_picture_url'];
         QuickAlert.show(
           context: context,
           type: QuickAlertType.success,
           title: 'User',
-          text: 'user created successful',
-          confirmBtnColor: Colors.green,
           onConfirmBtnTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => InitialQRGenerator(
-                  qrData: _emailController.text,
-                  name: _userIdController.text,
-                ),
-              ),
-            );
+            Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (_) => login_screen()));
           },
+          text: 'update data',
+          confirmBtnColor: Colors.green,
         );
       });
-    } catch (e) {
-      setState(() {
-        QuickAlert.show(
-          context: context,
-          type: QuickAlertType.error,
-          title: 'User',
-          text: 'user not created $e',
-          confirmBtnColor: Colors.red,
-        );
-        print(e);
-      });
+    } else {
+      QuickAlert.show(
+        context: context,
+        type: QuickAlertType.error,
+        title: 'User',
+        text: 'user not update data',
+        confirmBtnColor: Colors.red,
+      );
     }
+    // var response = await request.send();
+    // if (response.statusCode == 200) {
+    //   var responseData = await response.stream.bytesToString();
+    //   var jsonResponse = jsonDecode(responseData);
+    //   print(jsonResponse);
+    //
+    // } else {
+    //   print('Failed to save profile');
+    // }
   }
 
   Widget build(BuildContext context) {
@@ -68,9 +121,11 @@ class _SignupState extends State<Signup> {
         body: SingleChildScrollView(
           child: Container(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 Container(
-                  height: mq.height * .40,
+                  height: mq.height * .30,
                   decoration: BoxDecoration(
                       image: DecorationImage(
                           image: AssetImage('assets/images/background.png'),
@@ -80,7 +135,7 @@ class _SignupState extends State<Signup> {
                       Positioned(
                         left: 30,
                         width: 80,
-                        height: 200,
+                        height: 150,
                         child: FadeInUp(
                             duration: Duration(seconds: 1),
                             child: Container(
@@ -93,7 +148,7 @@ class _SignupState extends State<Signup> {
                       Positioned(
                         left: 140,
                         width: 80,
-                        height: 150,
+                        height: 100,
                         child: FadeInUp(
                             duration: Duration(milliseconds: 1200),
                             child: Container(
@@ -107,7 +162,7 @@ class _SignupState extends State<Signup> {
                         right: 40,
                         top: 40,
                         width: 80,
-                        height: 150,
+                        height: 100,
                         child: FadeInUp(
                             duration: Duration(milliseconds: 1300),
                             child: Container(
@@ -130,10 +185,10 @@ class _SignupState extends State<Signup> {
                                 );
                               },
                               child: Container(
-                                margin: EdgeInsets.only(top: mq.height * .02),
+                                margin: EdgeInsets.only(top: mq.height * .15),
                                 child: Center(
                                   child: Text(
-                                    "SignUp",
+                                    "Profile Update",
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 40,
@@ -150,6 +205,53 @@ class _SignupState extends State<Signup> {
                   padding: EdgeInsets.symmetric(horizontal: mq.width * .055),
                   child: Column(
                     children: <Widget>[
+                      Container(
+                        alignment: Alignment.center,
+                        margin: EdgeInsets.only(top: 0),
+                        child: Stack(
+                          children: [
+                            ClipOval(
+                              clipBehavior: Clip.antiAlias,
+                              child: _image != null
+                                  ? Image.file(
+                                      _image!,
+                                      fit: BoxFit.cover,
+                                      width: mq.width * 0.4,
+                                      height: mq.width * 0.4,
+                                    )
+                                  : (_profileImageUrl != null &&
+                                          _profileImageUrl!.isNotEmpty)
+                                      ? Image.network(
+                                          _profileImageUrl!,
+                                          fit: BoxFit.cover,
+                                          width: mq.width * 0.4,
+                                          height: mq.width * 0.4,
+                                        )
+                                      : Image.asset(
+                                          widget.info.icon,
+                                          fit: BoxFit.cover,
+                                          width: mq.width * 0.4,
+                                          height: mq.width * 0.4,
+                                        ),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              left: mq.width * .25,
+                              child: MaterialButton(
+                                color: Colors.white,
+                                shape: CircleBorder(),
+                                onPressed: () {
+                                  _pickImage();
+                                },
+                                child: Icon(Icons.edit),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
                       FadeInUp(
                           duration: Duration(milliseconds: 1800),
                           child: Container(
@@ -166,8 +268,9 @@ class _SignupState extends State<Signup> {
                                       offset: Offset(0, 10))
                                 ]),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                FadeInLeft(
+                                FadeInRight(
                                   duration: Duration(milliseconds: 1900),
                                   child: Container(
                                     padding: EdgeInsets.all(8.0),
@@ -176,13 +279,9 @@ class _SignupState extends State<Signup> {
                                             bottom: BorderSide(
                                                 color: Color.fromRGBO(
                                                     143, 148, 251, 1)))),
-                                    child: TextFormField(
-                                      controller: _userIdController,
-                                      decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          hintText: "User Name",
-                                          hintStyle: TextStyle(
-                                              color: Colors.grey[700])),
+                                    child: Text(
+                                      "ID: ${widget.info.User_id}",
+                                      style: TextStyle(fontSize: 20),
                                     ),
                                   ),
                                 ),
@@ -195,13 +294,9 @@ class _SignupState extends State<Signup> {
                                             bottom: BorderSide(
                                                 color: Color.fromRGBO(
                                                     143, 148, 251, 1)))),
-                                    child: TextFormField(
-                                      controller: _emailController,
-                                      decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          hintText: "Email",
-                                          hintStyle: TextStyle(
-                                              color: Colors.grey[700])),
+                                    child: Text(
+                                      "Email: ${widget.info.email}",
+                                      style: TextStyle(fontSize: 20),
                                     ),
                                   ),
                                 ),
@@ -215,30 +310,24 @@ class _SignupState extends State<Signup> {
                                                 color: Color.fromRGBO(
                                                     143, 148, 251, 1)))),
                                     child: TextFormField(
-                                      controller: _passwordController,
+                                      controller: _nameController,
                                       decoration: InputDecoration(
                                           border: InputBorder.none,
-                                          hintText: "password",
+                                          hintText: "Name",
                                           hintStyle: TextStyle(
                                               color: Colors.grey[700])),
                                     ),
                                   ),
                                 ),
-                                FadeInRight(
+                                FadeInLeft(
                                   duration: Duration(milliseconds: 1900),
                                   child: Container(
                                     padding: EdgeInsets.all(8.0),
                                     child: TextFormField(
-                                      obscureText: true,
-                                      validator: (value) {
-                                        if (value != _passwordController.text) {
-                                          return 'Passwords do not match';
-                                        }
-                                        return null;
-                                      },
+                                      controller: _bioController,
                                       decoration: InputDecoration(
                                           border: InputBorder.none,
-                                          hintText: "Re-enter Password",
+                                          hintText: "Bio",
                                           hintStyle: TextStyle(
                                               color: Colors.grey[700])),
                                     ),
@@ -254,7 +343,7 @@ class _SignupState extends State<Signup> {
                         duration: Duration(milliseconds: 1900),
                         child: GestureDetector(
                           onTap: () {
-                            _handleSignup();
+                            _saveProfile();
                           },
                           child: Container(
                             height: 50,
@@ -266,39 +355,13 @@ class _SignupState extends State<Signup> {
                                 ])),
                             child: Center(
                               child: Text(
-                                "SignUp",
+                                "Set Profile",
                                 style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 30,
-                      ),
-                      Container(
-                        width: double.maxFinite,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            FadeInLeft(
-                                duration: Duration(milliseconds: 2000),
-                                child: Text(
-                                  "Already have an account? ",
-                                  style: TextStyle(
-                                      color: Color.fromARGB(193, 46, 46, 46),
-                                      fontWeight: FontWeight.bold),
-                                )),
-                            FadeInRight(
-                                duration: Duration(milliseconds: 2500),
-                                child: Text(
-                                  "SignIn",
-                                  style: TextStyle(
-                                      color: Color.fromRGBO(143, 148, 251, 1)),
-                                )),
-                          ],
                         ),
                       ),
                     ],

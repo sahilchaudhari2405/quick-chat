@@ -1,22 +1,27 @@
 import 'screen/splash_screen.dart';
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/material.dart';
 
 late bool them = false;
 late Size mq;
 late String mode;
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final storage = new FlutterSecureStorage();
+  final RefreshToken = await storage.read(key: 'refreshToken');
+  runApp(MyApp(token: (RefreshToken != null) ? RefreshToken : ''));
 }
+
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final token;
+  MyApp({required this.token});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: (them) ? ThemeData.dark() : ThemeData.light(),
-      home: splash_screen(),
+      home: SplashScreen(token: token),
     );
   }
 }

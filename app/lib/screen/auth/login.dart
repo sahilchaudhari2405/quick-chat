@@ -1,10 +1,16 @@
+import 'package:app/main.dart';
 import 'package:app/model/ChatModel.dart';
+import 'package:app/model/device.dart';
+import 'package:app/screen/auth/signup.dart';
 import 'package:app/screen/temp/data.dart';
 import 'package:app/server/api/_api_services_auth.dart';
 import 'package:app/server/api/device_api.dart';
+import 'package:app/server/api/get_profile.dart';
 import 'package:app/server/methods/login_function.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 
@@ -21,48 +27,19 @@ class _login_screenState extends State<login_screen> {
   final TextEditingController _userIdController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final ApiService_auth _apiService = ApiService_auth();
-
+  final DeviceInfoService _deviceInfoService = DeviceInfoService();
   String _deviceType = '';
   String _deviceId = '';
   String _message = '';
   final login_check_data_input check_data = login_check_data_input();
+  GetProfile? getProfile;
   @override
-  void initState() {
-    super.initState();
-    _getDeviceInfo();
-  }
-
-  Future<void> _getDeviceInfo() async {
-    final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
-    String deviceType;
-    String deviceId;
-
+  Future<void> _fetchDeviceInfo() async {
     try {
-      if (Theme.of(context).platform == TargetPlatform.android) {
-        final androidInfo = await deviceInfoPlugin.androidInfo;
-        deviceType = 'android';
-        deviceId = androidInfo.id;
-      } else if (Theme.of(context).platform == TargetPlatform.iOS) {
-        final iosInfo = await deviceInfoPlugin.iosInfo;
-        deviceType = 'iphone';
-        deviceId = iosInfo.name;
-      } else if (Theme.of(context).platform == TargetPlatform.macOS) {
-        final macOsInfo = await deviceInfoPlugin.macOsInfo;
-        deviceType = 'macbook';
-        deviceId = macOsInfo.computerName;
-      } else if (Theme.of(context).platform == TargetPlatform.windows) {
-        final windowsInfo = await deviceInfoPlugin.windowsInfo;
-        deviceType = 'windows';
-        deviceId = windowsInfo.deviceId;
-      } else {
-        // Assuming web is also supported
-        deviceType = 'website';
-        deviceId = 'web-${DateTime.now().millisecondsSinceEpoch}';
-      }
-
-      setState(() {
-        _deviceType = 'android';
-        _deviceId = '13ekdkskjaf';
+      final deviceInfo = await _deviceInfoService.getDeviceInfo(context);
+      setState(() async {
+        _deviceType = deviceInfo['deviceType']!;
+        _deviceId = deviceInfo['deviceId']!;
       });
     } catch (e) {
       setState(() {
@@ -71,13 +48,21 @@ class _login_screenState extends State<login_screen> {
     }
   }
 
+  Future<void> getdata(String id) async {
+    final GetProfile getProfile = GetProfile();
+    await getProfile.getProfile(id);
+  }
+
   Future<void> _handleLogin() async {
     final String userId = _userIdController.text;
     final String password = _passwordController.text;
     try {
+      await _fetchDeviceInfo();
       await _apiService.login(userId, password);
+
       print(_deviceId);
-      await _apiService.handleDeviceLogin(userId, 'sagar', 'android');
+      await _apiService.handleDeviceLogin(userId, _deviceId, _deviceType);
+      await getdata(userId);
       setState(() {
         QuickAlert.show(
           context: context,
@@ -88,10 +73,7 @@ class _login_screenState extends State<login_screen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (_) => mainpage(
-                  UserInfo: chatData[0],
-                  contacts: chatData,
-                ),
+                builder: (_) => mainpage(),
               ),
             );
           },
@@ -188,6 +170,7 @@ class _login_screenState extends State<login_screen> {
                 Padding(
                   padding: EdgeInsets.all(30.0),
                   child: Column(
+                    // crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
                       FadeInUp(
                           duration: Duration(milliseconds: 1800),
@@ -206,36 +189,52 @@ class _login_screenState extends State<login_screen> {
                                 ]),
                             child: Column(
                               children: <Widget>[
-                                Container(
-                                  padding: EdgeInsets.all(8.0),
-                                  decoration: BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(
-                                              color: Color.fromRGBO(
-                                                  143, 148, 251, 1)))),
-                                  child: TextFormField(
-                                    controller: _userIdController,
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: "Email or user_name",
-                                        hintStyle:
-                                            TextStyle(color: Colors.grey[700])),
+                                FadeInLeft(
+                                  duration: Duration(milliseconds: 1900),
+                                  child: Container(
+                                    padding: EdgeInsets.all(8.0),
+                                    decoration: BoxDecoration(
+                                        border: Border(
+                                            bottom: BorderSide(
+                                                color: Color.fromRGBO(
+                                                    143, 148, 251, 1)))),
+                                    child: TextFormField(
+                                      controller: _userIdController,
+                                      decoration: InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: "Email or user_name",
+                                          hintStyle: TextStyle(
+                                              color: Colors.grey[700])),
+                                    ),
                                   ),
                                 ),
-                                Container(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: TextField(
-                                    controller: _passwordController,
-                                    obscureText: true,
-                                    decoration: InputDecoration(
-                                        border: InputBorder.none,
-                                        hintText: "Password",
-                                        hintStyle:
-                                            TextStyle(color: Colors.grey[700])),
+                                FadeInRight(
+                                  duration: Duration(milliseconds: 1900),
+                                  child: Container(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: TextField(
+                                      controller: _passwordController,
+                                      obscureText: true,
+                                      decoration: InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: "Password",
+                                          hintStyle: TextStyle(
+                                              color: Colors.grey[700])),
+                                    ),
                                   ),
                                 )
                               ],
                             ),
+                          )),
+                      SizedBox(
+                        height: 30,
+                      ),
+                      FadeInRight(
+                          duration: Duration(milliseconds: 1900),
+                          child: Text(
+                            "Forgot Password?",
+                            style: TextStyle(
+                                color: Color.fromRGBO(143, 148, 251, 1)),
                           )),
                       SizedBox(
                         height: 30,
@@ -265,15 +264,42 @@ class _login_screenState extends State<login_screen> {
                             ),
                           )),
                       SizedBox(
-                        height: 70,
+                        height: 30,
                       ),
-                      FadeInUp(
-                          duration: Duration(milliseconds: 2000),
-                          child: Text(
-                            "Forgot Password?",
-                            style: TextStyle(
-                                color: Color.fromRGBO(143, 148, 251, 1)),
-                          )),
+                      Container(
+                        width: double.maxFinite,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            FadeInLeft(
+                                duration: Duration(milliseconds: 2000),
+                                child: Text(
+                                  "Don't have a account? ",
+                                  style: TextStyle(
+                                      color: Color.fromARGB(193, 46, 46, 46),
+                                      fontWeight: FontWeight.bold),
+                                )),
+                            FadeInRight(
+                                duration: Duration(milliseconds: 2500),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => Signup(),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    "SignUp",
+                                    style: TextStyle(
+                                        color:
+                                            Color.fromRGBO(143, 148, 251, 1)),
+                                  ),
+                                )),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 )

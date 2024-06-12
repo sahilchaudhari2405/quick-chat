@@ -6,8 +6,8 @@ const { user } = require('pg/lib/defaults');
 const auth= require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
-
-async function handleGetUserById(req, res) {
+const {generateToken} = require('../middleware/auth');
+async function handlelogin(req, res) {
   const { user_id, password, email } = req.body;
 
   try {
@@ -22,15 +22,10 @@ async function handleGetUserById(req, res) {
 
     const validPass = await bcrypt.compare(password, user.rows[0].password);
     if (!validPass) return res.status(400).send('Invalid password');
+     else{
+      return  res.status(200).send('User success login');
 
-    const token = "sahil"
-    res.status(200).header('Authorization', `Bearer ${token}`).send({
-      token,
-      user: {
-        user_id: user.rows[0].user_id,
-        email: user.rows[0].email,
-      }
-    });
+     }
   } catch (error) {
     res.status(400).send(error.message);
   }
@@ -77,8 +72,14 @@ async function handleDevice(req, res) {
         'UPDATE devices SET isactive = true, updated_at = $1 WHERE user_id = $2 AND device_id = $3 AND type = $4', 
         [currentTimestamp, user_id, device_id, type]
       );
+      const accessToken = generateToken(user_id, device_id, '10min');
+      const refreshToken = generateToken(user_id, device_id, '1h');
+      await dbClient.query(
+        'INSERT INTO access (user_id, device_id, token, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL \'1 hour\')',
+        [user_id, device_id, refreshToken]
+      );
       console.log('Device reactivated:', existingDevice);
-      return res.status(200).json({ message: "Device reactivated successfully" });
+      return res.status(200).json({ message: "Device reactivated successfully", accessToken, refreshToken });
     } else {
       const newDevice = await dbClient.query(
         `INSERT INTO devices (user_id, device_id, type, isactive, created_at, updated_at) 
@@ -86,15 +87,19 @@ async function handleDevice(req, res) {
         [user_id, device_id, type, currentTimestamp]
       );
       console.log('New device registered:', newDevice.rows[0]);
-      return res.status(200).json({ message: "Device registered and activated successfully" });
+      const accessToken = generateToken(user_id, device_id, '10min');
+      const refreshToken = generateToken(user_id, device_id, '1h');
+      await dbClient.query(
+        'INSERT INTO access (user_id, device_id, token, expires_at) VALUES ($1, $2, $3, NOW() + INTERVAL \'1 hour\')',
+        [user_id, device_id, refreshToken]
+      );
+      return res.status(200).json({ message: "Device registered and activated successfully", accessToken, refreshToken });
     }
   } catch (error) {
     console.error('Error in handleDevice:', error);
     res.status(400).send(error.message || 'An error occurred');
   }
 }
-
-
 
 async function handleAddNewUser(req, res) {
   const { user_id, email, password } = req.body;
@@ -122,7 +127,7 @@ async function handleAddNewUser(req, res) {
 }
 
 module.exports = {
-  handleGetUserById,
+  handlelogin,
   handleDevice,
   handleAddNewUser
 };

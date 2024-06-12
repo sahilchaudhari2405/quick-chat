@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 import 'package:animate_do/animate_do.dart';
+import 'package:app/model/profile.dart';
+import 'package:app/screen/User_profile.dart';
 import 'package:app/screen/auth/login.dart';
+import 'package:app/screen/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:screenshot/screenshot.dart';
@@ -19,7 +22,6 @@ class InitialQRGenerator extends StatefulWidget {
 
 class _InitialQRGeneratorState extends State<InitialQRGenerator> {
   ScreenshotController screenshotController = ScreenshotController();
-
   Future<void> saveQrCode() async {
     final directory = await getApplicationDocumentsDirectory();
     final imagePath = await screenshotController.captureAndSave(directory.path,
@@ -35,6 +37,15 @@ class _InitialQRGeneratorState extends State<InitialQRGenerator> {
     }
   }
 
+  void profilepage() {
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (_) => init_profile(
+                info: profileData(User_id: widget.name!, email: widget.qrData!))));
+  }
+
+  @override
   final LinearGradient _gradient =
       LinearGradient(colors: [Colors.red, Colors.blue]);
 
@@ -83,7 +94,7 @@ class _InitialQRGeneratorState extends State<InitialQRGenerator> {
                 },
                 child: FadeInUp(
                   child: Text(
-                    "Hi ${widget.name ?? ''}",
+                    "Hi ${widget.name} ",
                     maxLines: 1,
                     style: Theme.of(context).textTheme.headlineLarge!.copyWith(
                         fontWeight: FontWeight.bold, color: Colors.white),
@@ -96,8 +107,7 @@ class _InitialQRGeneratorState extends State<InitialQRGenerator> {
             ),
             InkWell(
               onTap: () {
-                Navigator.pushReplacement(
-                    context, MaterialPageRoute(builder: (_) => login_screen()));
+                profilepage();
               },
               child: Container(
                 height: 50,

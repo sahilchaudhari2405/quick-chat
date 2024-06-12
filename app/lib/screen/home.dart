@@ -1,31 +1,26 @@
 import 'dart:io';
 
-import 'package:app/model/ChatModel.dart';
+import 'package:app/screen/auth/login.dart';
+import 'package:app/screen/profile.dart';
+import 'package:app/screen/temp/data.dart';
+import 'package:app/server/methods/logout.dart';
 import 'package:app/widget/ContactUserCard.dart';
 import 'package:app/widget/RecentCard.dart';
 import 'package:flutter/widgets.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-
 import 'scan_code_page.dart';
-
 import '../main.dart';
-
-import 'auth/login.dart';
-import 'profile.dart';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+// ignore: must_be_immutable
 class mainpage extends StatefulWidget {
-  mainpage({required this.contacts, required this.UserInfo});
-  List<ChatModel> contacts;
-  ChatModel UserInfo;
   @override
   State<mainpage> createState() => _mainpageState();
 }
 
 class _mainpageState extends State<mainpage> {
   File? _image;
+
   Future<void> _pickImage(ImageSource source, bool option) async {
     final pickedFile = await ImagePicker().pickImage(source: source);
     if (pickedFile != null) {
@@ -78,16 +73,17 @@ class _mainpageState extends State<mainpage> {
               },
             ),
             PopupMenuButton<String>(
-              onSelected: (value) {
+              onSelected: (value) async {
                 // Handle menu actions here
                 if (value == 'settings') {
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => ProfileEditScreen(
-                                info: widget.UserInfo,
-                              )));
+                  setState(() {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (_) => Profile_Info()));
+                    ;
+                  });
                 } else if (value == 'logout') {
+                  // await storage.deleteAll();
+                  await Logout().logout();
                   Navigator.pushReplacement(context,
                       MaterialPageRoute(builder: (_) => login_screen()));
                 }
@@ -126,14 +122,14 @@ class _mainpageState extends State<mainpage> {
         body: TabBarView(
           children: [
             ListView.builder(
-              itemCount: widget.contacts.length,
+              itemCount: chatData.length,
               physics: BouncingScrollPhysics(),
               itemBuilder: (context, index) {
                 return Column(
                   children: [
                     RecentCard(
-                      contact: widget.contacts[index],
-                      UserInfo: widget.UserInfo,
+                      contact: chatData[index],
+                      UserInfo: chatData[0],
                     ),
                     Divider(
                       indent: mq.width * .03,
@@ -150,8 +146,8 @@ class _mainpageState extends State<mainpage> {
                 return Column(
                   children: [
                     ContactUserCard(
-                      contact: widget.contacts[index],
-                      UserInfo: widget.UserInfo,
+                      contact: chatData[index],
+                      UserInfo: chatData[0],
                     ),
                     Divider(
                       indent: mq.width * .02,
