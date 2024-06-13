@@ -208,7 +208,7 @@ class _Profile_InfoState extends State<Profile_Info> {
                                           ),
                                         ),
                                       ),
-                                      FadeInRight(
+                                      FadeInLeft(
                                         duration: Duration(milliseconds: 1900),
                                         child: Container(
                                           padding: EdgeInsets.all(8.0),
@@ -223,7 +223,7 @@ class _Profile_InfoState extends State<Profile_Info> {
                                           ),
                                         ),
                                       ),
-                                      FadeInLeft(
+                                      FadeInRight(
                                         duration: Duration(milliseconds: 1900),
                                         child: Container(
                                           padding: EdgeInsets.all(8.0),
@@ -281,7 +281,7 @@ class _Profile_InfoState extends State<Profile_Info> {
                             SizedBox(
                               height: 30,
                             ),
-                            FadeInUp(
+                            FadeInRightBig(
                               duration: Duration(milliseconds: 1900),
                               child: GestureDetector(
                                 onTap: () {
