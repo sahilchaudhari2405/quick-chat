@@ -1,12 +1,16 @@
+import 'package:app/model/OtherUser.dart';
+
 import '../model/ChatModel.dart';
 import 'package:flutter/material.dart';
 import '../main.dart';
 import '../screen/chatScreen.dart';
 
 class ContactUserCard extends StatelessWidget {
-  ContactUserCard({required this.contact, required this.UserInfo});
+  ContactUserCard(
+      {required this.contact, required this.UserInfo, required this.user_info});
   ChatModel contact;
   ChatModel UserInfo;
+  OtherUser user_info;
   @override
   Widget build(BuildContext context) {
     mq = MediaQuery.of(context).size;
@@ -26,15 +30,16 @@ class ContactUserCard extends StatelessWidget {
         minTileHeight: 0,
         leading: CircleAvatar(
           radius: mq.height * .03, // Adjust the radius as needed
-          backgroundImage: AssetImage('assets/images/aai.JPG'),
+          backgroundImage:
+              NetworkImage('http://10.0.2.2:3000${user_info.image}'),
           backgroundColor: Colors.transparent,
         ),
         title: Text(
-          contact.name,
+          user_info.name,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Expanded(
-          child: Text(contact.currentMessage,
+          child: Text(user_info.bio,
               maxLines: 1, overflow: TextOverflow.ellipsis, softWrap: true),
         ),
       ),

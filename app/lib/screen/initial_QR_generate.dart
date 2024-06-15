@@ -1,20 +1,23 @@
 import 'dart:typed_data';
 import 'package:animate_do/animate_do.dart';
-import '../model/profile.dart';
-import 'User_profile.dart';
-import 'auth/login.dart';
-import 'profile.dart';
 import 'package:flutter/material.dart';
-import 'package:pretty_qr_code/pretty_qr_code.dart';
-import 'package:screenshot/screenshot.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'dart:io';
+import 'package:pretty_qr_code/pretty_qr_code.dart';
+import 'package:screenshot/screenshot.dart';
+import '../model/profile.dart';
+import 'User_profile.dart';
 
 class InitialQRGenerator extends StatefulWidget {
-  final String? qrData, name;
+  final String qrData;
+  final String name;
+  final bool initpage;
 
-  InitialQRGenerator({super.key, required this.qrData, this.name});
+  InitialQRGenerator({
+    required this.qrData,
+    required this.name,
+    required this.initpage,
+  });
 
   @override
   State<InitialQRGenerator> createState() => _InitialQRGeneratorState();
@@ -22,32 +25,38 @@ class InitialQRGenerator extends StatefulWidget {
 
 class _InitialQRGeneratorState extends State<InitialQRGenerator> {
   ScreenshotController screenshotController = ScreenshotController();
+
   Future<void> saveQrCode() async {
     final directory = await getApplicationDocumentsDirectory();
-    final imagePath = await screenshotController.captureAndSave(directory.path,
-        fileName: 'QR_code.png');
+    final imagePath = await screenshotController.captureAndSave(
+      directory.path,
+      fileName: 'QR_code.png',
+    );
     if (imagePath != null) {
       final result = await ImageGallerySaver.saveFile(imagePath);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(result['isSuccess']
-                ? 'QR Code Saved!'
-                : 'Failed to save QR Code')),
+          content: Text(result['isSuccess']
+              ? 'QR Code Saved!'
+              : 'Failed to save QR Code'),
+        ),
       );
     }
   }
 
-  void profilepage() {
+  void navigateToProfilePage() {
     Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (_) => init_profile(
-                info: profileData(User_id: widget.name!, email: widget.qrData!))));
+      context,
+      MaterialPageRoute(
+        builder: (_) => init_profile(
+          info: profileData(
+            User_id: widget.name,
+            email: widget.qrData,
+          ),
+        ),
+      ),
+    );
   }
-
-  @override
-  final LinearGradient _gradient =
-      LinearGradient(colors: [Colors.red, Colors.blue]);
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +69,7 @@ class _InitialQRGeneratorState extends State<InitialQRGenerator> {
         actions: [
           IconButton(
             onPressed: saveQrCode,
-            icon: const Icon(
-              Icons.download,
-            ),
+            icon: const Icon(Icons.download),
           ),
         ],
       ),
@@ -83,50 +90,56 @@ class _InitialQRGeneratorState extends State<InitialQRGenerator> {
                   ),
                 ),
               ),
-            const SizedBox(
-              height: 30,
-            ),
+            const SizedBox(height: 30),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: mq.width * .05),
+              padding: EdgeInsets.symmetric(horizontal: mq.width * 0.05),
               child: ShaderMask(
                 shaderCallback: (Rect rect) {
-                  return _gradient.createShader(rect);
+                  return LinearGradient(
+                    colors: [Colors.red, Colors.blue],
+                  ).createShader(rect);
                 },
                 child: FadeInUp(
                   child: Text(
-                    "Hi ${widget.name} ",
+                    "Hi ${widget.name}",
                     maxLines: 1,
                     style: Theme.of(context).textTheme.headlineLarge!.copyWith(
-                        fontWeight: FontWeight.bold, color: Colors.white),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                   ),
                 ),
               ),
             ),
-            SizedBox(
-              height: mq.height * .030,
-            ),
-            InkWell(
-              onTap: () {
-                profilepage();
-              },
-              child: Container(
-                height: 50,
-                width: mq.width * .5,
-                decoration: BoxDecoration(
+            SizedBox(height: mq.height * 0.030),
+            Visibility(
+              visible: widget.initpage,
+              child: InkWell(
+                onTap: navigateToProfilePage,
+                child: Container(
+                  height: 50,
+                  width: mq.width * 0.5,
+                  decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    gradient: LinearGradient(colors: [
-                      Color.fromRGBO(143, 148, 251, 1),
-                      Color.fromRGBO(143, 148, 251, .6),
-                    ])),
-                child: Center(
-                  child: Text(
-                    "Next",
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold),
+                    gradient: LinearGradient(
+                      colors: [
+                        Color.fromRGBO(143, 148, 251, 1),
+                        Color.fromRGBO(143, 148, 251, 0.6),
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      "Next",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

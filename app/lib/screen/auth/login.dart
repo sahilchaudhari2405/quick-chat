@@ -1,3 +1,5 @@
+import 'package:app/server/api/OtherUser.dart';
+
 import '../../main.dart';
 import '../../model/ChatModel.dart';
 import '../../model/device.dart';
@@ -53,17 +55,21 @@ class _login_screenState extends State<login_screen> {
     await getProfile.getProfile(id);
   }
 
-  Future<void> _handleLogin() async {
-    final String userId = _userIdController.text;
-    final String password = _passwordController.text;
-    try {
-      await _fetchDeviceInfo();
-      await _apiService.login(userId, password);
+Future<void> _handleLogin() async {
+  final String userId = _userIdController.text;
+  final String password = _passwordController.text;
+  try {
+    await _fetchDeviceInfo();
+    await _apiService.login(userId, password);
 
-      print(_deviceId);
-      await _apiService.handleDeviceLogin(userId, _deviceId, _deviceType);
-      await getdata(userId);
-      setState(() {
+    print(userId);
+    await _apiService.handleDeviceLogin(userId, _deviceId, _deviceType);
+    await getdata(userId);
+    
+    String getUserResponse = await OtherUserService().getUser(userId);
+    
+    setState(() {
+      if (getUserResponse == 'success' ||getUserResponse == 'New User'  ) {
         QuickAlert.show(
           context: context,
           type: QuickAlertType.success,
@@ -79,19 +85,20 @@ class _login_screenState extends State<login_screen> {
           },
           confirmBtnColor: Colors.green,
         );
-      });
-    } catch (e) {
-      setState(() {
-        QuickAlert.show(
-          context: context,
-          type: QuickAlertType.error,
-          title: 'User',
-          text: 'Login fail ${e.toString()}',
-          confirmBtnColor: Colors.red,
-        );
-      });
-    }
+      } 
+    });
+  } catch (e) {
+    setState(() {
+      QuickAlert.show(
+        context: context,
+        type: QuickAlertType.error,
+        title: 'User',
+        text: 'Login failed: ${e.toString()}',
+        confirmBtnColor: Colors.red,
+      );
+    });
   }
+}
 
   Widget build(BuildContext context) {
     return Scaffold(

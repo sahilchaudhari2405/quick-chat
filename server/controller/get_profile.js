@@ -5,7 +5,7 @@ async function handleGetUser(req, res) {
     console.log(id); // To verify the id parameter
 
     try {
-        const result = await pool.query('SELECT user_id, email, name, bio, profile_picture,is_active FROM contacts WHERE user_id = $1', [id]);
+        const result = await pool.query('SELECT user_id, email, name, bio, profile_picture,is_active FROM contacts WHERE user_id = $1 OR email = $1', [id]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ message: 'User not found' });

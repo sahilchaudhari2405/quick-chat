@@ -42,6 +42,7 @@ class _SignupState extends State<Signup> {
                 builder: (_) => InitialQRGenerator(
                   qrData: _emailController.text,
                   name: _userIdController.text,
+                  initpage: true,
                 ),
               ),
             );

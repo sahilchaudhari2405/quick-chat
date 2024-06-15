@@ -37,7 +37,8 @@ class OtherUser {
   // Save list of profiles to secure storage
   static Future<void> saveList(List<OtherUser> userList) async {
     final storage = FlutterSecureStorage();
-    final List<Map<String, dynamic>> userJsonList = userList.map((user) => user.toJson()).toList();
+    final List<Map<String, dynamic>> userJsonList =
+        userList.map((user) => user.toJson()).toList();
     final jsonString = json.encode(userJsonList);
     await storage.write(key: 'UserContacts', value: jsonString);
   }
@@ -54,20 +55,20 @@ class OtherUser {
   }
 
   // Add a user to the list and save it
-  static Future<void> addUser(OtherUser newUser) async {
-    final storage = FlutterSecureStorage();
-    final jsonString = await storage.read(key: 'UserContacts');
-    List<OtherUser> userList = [];
+  static Future<bool> addUser(OtherUser newUser) async {
+    List<OtherUser> userList = await loadList();
 
-    if (jsonString != null && jsonString.isNotEmpty) {
-      // If the list exists, load it
-      final List<dynamic> jsonList = json.decode(jsonString);
-      userList = jsonList.map((json) => OtherUser.fromJson(json)).toList();
+    if (userList != null && userList.isNotEmpty) {
+      bool userExists = userList.any((user) => user.userId == newUser.userId);
+      if (userExists) {
+        return true;
+      }
     }
     userList.add(newUser);
 
     // Save the updated list
     await saveList(userList);
+    return false;
   }
 
   Future<void> updateField(String key, String value) async {
@@ -75,7 +76,8 @@ class OtherUser {
     final jsonString = await storage.read(key: 'UserContacts');
     if (jsonString != null) {
       List<dynamic> jsonList = json.decode(jsonString);
-      final index = jsonList.indexWhere((userJson) => userJson['user_id'] == this.userId);
+      final index =
+          jsonList.indexWhere((userJson) => userJson['user_id'] == this.userId);
       if (index != -1) {
         jsonList[index][key] = value;
         await storage.write(key: 'UserContacts', value: json.encode(jsonList));

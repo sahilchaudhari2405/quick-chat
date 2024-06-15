@@ -1,5 +1,9 @@
 import 'dart:ui';
 
+import 'package:app/screen/chatScreen.dart';
+import 'package:app/screen/temp/data.dart';
+import 'package:app/widget/ContactUserCard.dart';
+
 import '../server/api/OtherUser.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -9,9 +13,11 @@ import 'package:shimmer/shimmer.dart';
 import '../model/OtherUser.dart'; // Assuming OtherUser.dart is defined in this path
 
 class UserSearchScreen extends StatefulWidget {
-  @override
+  final String user_id;
+
   UserSearchScreen({required this.user_id});
-  String user_id;
+
+  @override
   _UserSearchScreenState createState() => _UserSearchScreenState();
 }
 
@@ -43,26 +49,27 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
         Uri.parse('http://10.0.2.2:3000/user/search'),
         headers: {
           'name': query,
-          'id': currentUserId, // Replace with the current user's ID
+          'id': currentUserId,
         },
       );
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
-        // print(response.body);
-        setState(() async {
-          _results = await data
-              .map((user) => OtherUser(
-                    name: user['name'], // Access 'name' from user map
-                    userId: user['user_id'], // Access 'user_id' from user map
-                    image: user[
-                        'profile_picture'], // Access 'profile_picture' from user map
-                    bio: user['bio'], // Access 'bio' from user map
-                  ))
-              .toList();
+        List<OtherUser> users = data
+            .map((user) => OtherUser(
+                  name: user['name'] ?? '',
+                  userId: user['user_id'] ?? '',
+                  image: user['profile_picture'] ?? '',
+                  bio: user['bio'] ?? '',
+                ))
+            .toList();
+
+        setState(() {
+          _results = users;
         });
-        print(data.length);
-      } else {
-        throw Exception('Failed to load users');
+      } else if (response.statusCode == 404) {
+        setState(() {
+          _results.clear();
+        });
       }
     } catch (e) {
       print('Error searching users: $e');
@@ -71,14 +78,24 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   }
 
   Future<void> _ConnectWithUser(OtherUser user) async {
-    await OtherUser.addUser(user);
     List<OtherUser> loadedList = await OtherUser.loadList();
+    for (int i = 0; i < loadedList.length; i++) {
+      print(loadedList[i].toJson());
+    }
     String response = await _otherUserService.saveUser(user, widget.user_id);
     print(loadedList.length);
     print(response);
   }
 
-  void _showUserDetailsModal(OtherUser user) {
+  Future<void> _showUserDetailsModal(OtherUser user) async {
+    final isExist = await OtherUser.addUser(user);
+    String buttonLeft = 'Cancel';
+    String buttonRight = 'Connect';
+
+    if (isExist) {
+      buttonRight = 'Chat';
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -97,8 +114,9 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage:
-                      NetworkImage('http://10.0.2.2:3000${user.image}'),
+                  backgroundImage: user.image != null
+                      ? NetworkImage('http://10.0.2.2:3000${user.image}')
+                      : AssetImage('assets/images/image.png') as ImageProvider,
                 ),
                 SizedBox(height: 20),
                 Text(
@@ -125,7 +143,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                         Navigator.pop(context); // Close the modal
                       },
                       child: Text(
-                        'Cancel',
+                        buttonLeft,
                         style: TextStyle(color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -135,11 +153,26 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.greenAccent),
                       onPressed: () {
-                        _ConnectWithUser(user);
-                        Navigator.pop(context); // Close the modal
+                        if (!isExist) {
+                          _ConnectWithUser(user);
+                          Navigator.pop(context);
+                        } else {
+                          Navigator.pop(context);
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatPage(
+                                contact: chatData[0],
+                                UserInfo: chatData[0],
+                              ),
+                            ),
+                          );
+                        }
                       },
-                      child: Text('Connect',
-                          style: TextStyle(color: Colors.white)),
+                      child: Text(
+                        buttonRight,
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -186,7 +219,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   controller: _controller,
                 ),
               ),
-              (isLoaded)
+              (_results != null && isLoaded)
                   ? ListView.builder(
                       shrinkWrap: true,
                       itemCount: _results.length,
