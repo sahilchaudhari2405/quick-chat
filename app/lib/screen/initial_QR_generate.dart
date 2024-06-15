@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:animate_do/animate_do.dart';
-import 'package:app/model/profile.dart';
-import 'package:app/screen/User_profile.dart';
-import 'package:app/screen/auth/login.dart';
-import 'package:app/screen/profile.dart';
+import '../model/profile.dart';
+import 'User_profile.dart';
+import 'auth/login.dart';
+import 'profile.dart';
 import 'package:flutter/material.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 import 'package:screenshot/screenshot.dart';
@@ -13,10 +13,8 @@ import 'dart:io';
 
 class InitialQRGenerator extends StatefulWidget {
   final String? qrData, name;
-  final bool initPage;
 
-  InitialQRGenerator(
-      {super.key, required this.qrData, this.name, required this.initPage});
+  InitialQRGenerator({super.key, required this.qrData, this.name});
 
   @override
   State<InitialQRGenerator> createState() => _InitialQRGeneratorState();
@@ -44,8 +42,7 @@ class _InitialQRGeneratorState extends State<InitialQRGenerator> {
         context,
         MaterialPageRoute(
             builder: (_) => init_profile(
-                info: profileData(
-                    User_id: widget.name!, email: widget.qrData!))));
+                info: profileData(User_id: widget.name!, email: widget.qrData!))));
   }
 
   @override
@@ -108,27 +105,24 @@ class _InitialQRGeneratorState extends State<InitialQRGenerator> {
             SizedBox(
               height: mq.height * .030,
             ),
-            Visibility(
-              visible: widget.initPage,
-              child: InkWell(
-                onTap: () {
-                  profilepage();
-                },
-                child: Container(
-                  height: 50,
-                  width: mq.width * .5,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: LinearGradient(colors: [
-                        Color.fromRGBO(143, 148, 251, 1),
-                        Color.fromRGBO(143, 148, 251, .6),
-                      ])),
-                  child: Center(
-                    child: Text(
-                      "Next",
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
+            InkWell(
+              onTap: () {
+                profilepage();
+              },
+              child: Container(
+                height: 50,
+                width: mq.width * .5,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    gradient: LinearGradient(colors: [
+                      Color.fromRGBO(143, 148, 251, 1),
+                      Color.fromRGBO(143, 148, 251, .6),
+                    ])),
+                child: Center(
+                  child: Text(
+                    "Next",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

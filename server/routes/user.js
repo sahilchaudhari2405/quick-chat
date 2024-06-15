@@ -8,4 +8,4 @@ router.route('/login').post(handlelogin);
 router.route('/device').post(handleDevice);
 router.route('/logout').patch(handleLogout);
 router.route('/refreshToken').post(handleRefreshToken);
-module.exports = router;
+module.exports = router;    

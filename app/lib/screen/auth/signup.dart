@@ -1,5 +1,5 @@
-import 'package:app/model/profile.dart';
-import 'package:app/server/api/_api_services_auth.dart';
+import '../../model/profile.dart';
+import '../../server/api/_api_services_auth.dart';
 import 'package:quickalert/quickalert.dart';
 import '../initial_QR_generate.dart';
 
@@ -42,7 +42,6 @@ class _SignupState extends State<Signup> {
                 builder: (_) => InitialQRGenerator(
                   qrData: _emailController.text,
                   name: _userIdController.text,
-                  initPage: true,
                 ),
               ),
             );

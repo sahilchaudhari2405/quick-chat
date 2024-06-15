@@ -9,3 +9,4 @@ const upload = require('../middleware/multer.middleware');
 router.post('/:user_id', upload.single('profile_picture'), handleUpdateUserInfo);
 router.get('/:id',handleGetUser);
 module.exports = router;
+ 

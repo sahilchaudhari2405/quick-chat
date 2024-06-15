@@ -1,5 +1,5 @@
-import 'package:app/main.dart';
-import 'package:app/model/messageModel.dart';
+import '../main.dart';
+import '../model/messageModel.dart';
 import 'package:flutter/material.dart';
 
 class Replysmscard extends StatelessWidget {

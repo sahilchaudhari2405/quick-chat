@@ -1,15 +1,15 @@
 const express = require('express');
-const pool = require('../database/database-connection');
-
+const pool = require('../database/database-connection'); // Ensure this points to your database connection module
 
 async function handleFindUser(req, res) {
-    const { id } = req.params;
-    console.log(id); // To verify the id parameter
-
+    const { name, id } = req.headers; // Extract 'name' and 'id' from request headers
+     console.log(req.headers);
     try {
         const result = await pool.query(
-            'SELECT user_id, email, name, bio, profile_picture FROM contacts WHERE user_id ILIKE $1',
-            [`%${id}%`]
+            'SELECT c.user_id, c.email, c.name AS name, c.bio, c.profile_picture ' +
+            'FROM contacts c ' +
+            'WHERE c.user_id != $1 AND (c.user_id LIKE $2 OR c.name LIKE $2)',
+            [id, `%${name}%`]
         );
 
         if (result.rows.length === 0) {

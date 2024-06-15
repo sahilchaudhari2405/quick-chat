@@ -6,16 +6,14 @@ const dbClient = require('./database/database-connection'); // Import the databa
 const setupSocket = require('./sockets/socket'); // Import the socket setup
 const profileRouter = require('./routes/profile');
 const app = express();
-const NewUserConnect = require('./routes/NewUserConnect');
 app.use(express.json()); 
 app.use('/uploads/profile', express.static(path.join(__dirname,'uploads/profile')));
 app.use(express.urlencoded({ extended: false }));
 app.use('/', userRouter);
 app.use('/profile', profileRouter);
-app.use('/user',NewUserConnect);
 const server = http.createServer(app); 
 setupSocket(server); // Initialize the socket setup
 
 server.listen(3000, () => {
   console.log('listening on *:3000');
-});
+}); 

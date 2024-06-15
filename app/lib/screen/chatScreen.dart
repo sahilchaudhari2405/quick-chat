@@ -1,8 +1,8 @@
-import 'package:app/main.dart';
-import 'package:app/model/ChatModel.dart';
-import 'package:app/model/messageModel.dart';
-import 'package:app/widget/ownSmsCard.dart';
-import 'package:app/widget/replySmsCard.dart';
+import '../main.dart';
+import '../model/ChatModel.dart';
+import '../model/messageModel.dart';
+import '../widget/ownSmsCard.dart';
+import '../widget/replySmsCard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;

@@ -1,4 +1,4 @@
-import 'package:app/server/methods/logout.dart';
+import '../server/methods/logout.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 import '../main.dart';

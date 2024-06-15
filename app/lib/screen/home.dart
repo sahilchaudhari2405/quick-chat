@@ -1,24 +1,17 @@
 import 'dart:io';
-import 'dart:math';
 
-import 'package:app/model/menubutton.dart';
 import 'package:app/model/profile.dart';
-
-import 'package:app/screen/auth/login.dart';
-import 'package:app/screen/getGallaryimageScan.dart';
 import 'package:app/screen/initial_QR_generate.dart';
-import 'package:app/screen/profile.dart';
 import 'package:app/screen/search_screen.dart';
-import 'package:app/screen/temp/data.dart';
-import 'package:app/server/methods/logout.dart';
-import 'package:app/widget/ContactUserCard.dart';
-import 'package:app/widget/RecentCard.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:quickalert/models/quickalert_type.dart';
-import 'package:quickalert/widgets/quickalert_dialog.dart';
+
+import 'auth/login.dart';
+import 'profile.dart';
+import 'temp/data.dart';
+import '../server/methods/logout.dart';
+import '../widget/ContactUserCard.dart';
+import '../widget/RecentCard.dart';
+import 'package:flutter/widgets.dart';
 import 'scan_code_page.dart';
 import '../main.dart';
 import 'package:flutter/material.dart';
@@ -33,28 +26,41 @@ class mainpage extends StatefulWidget {
 class _mainpageState extends State<mainpage> {
   File? _image;
 
-  final MobileScannerController controller = MobileScannerController(
-      // required options for the scanner
-      );
-  // Future<void> _pickImage(ImageSource source, bool option) async {
-  //   final pickedFile = await ImagePicker().pickImage(source: source);
-  //   if (pickedFile != null) {
-  //     setState(() {
-  //       _image = File(pickedFile.path);
-  //     });
-  //     if (pickedFile != null) {
-  //       final File imageFile = File(pickedFile.path);
+// <<<<<<< Updated upstream
+//   Future<void> _pickImage(ImageSource source, bool option) async {
+//     final pickedFile = await ImagePicker().pickImage(source: source);
+//     if (pickedFile != null) {
+//       setState(() {
+//         _image = File(pickedFile.path);
+//       });
+//     }
+//   }
+//   final MobileScannerController controller = MobileScannerController(
+//       // required options for the scanner
+//       );
+//   // Future<void> _pickImage(ImageSource source, bool option) async {
+//   //   final pickedFile = await ImagePicker().pickImage(source: source);
+//   //   if (pickedFile != null) {
+//   //     setState(() {
+//   //       _image = File(pickedFile.path);
+//   //     });
+//   //     if (pickedFile != null) {
+//   //       final File imageFile = File(pickedFile.path);
 
-  //       final barcode =
-  //           await MobileScannerPlatform.instance.analyzeImage(imageFile!.path);
+//   //       final barcode =
+//   //           await MobileScannerPlatform.instance.analyzeImage(imageFile!.path);
 
-  //       String? result;
-  //       setState(() {
-  //         result = barcode.raw;
-  //       });
-  //     }
-  //   }
-  // }
+//   //       String? result;
+//   //       setState(() {
+//   //         result = barcode.raw;
+//   //       });
+//   //     }
+//   //   }
+//   // }
+  void initState() {
+    super.initState();
+    profileInfo();
+  }
 
   String user_id = '';
   String name = '';
@@ -77,7 +83,9 @@ class _mainpageState extends State<mainpage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => UserSearchScreen(),
+          builder: (_) => UserSearchScreen(
+            user_id: user_id,
+          ),
         ),
       ); // Call your ca
     });
@@ -121,9 +129,9 @@ class _mainpageState extends State<mainpage> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (_) => QRScanScreen()));
+                // Navigator.of(context).pop();
+                // Navigator.push(
+                //     context, MaterialPageRoute(builder: (_) => ()));
               },
               child: Text('Gallery'),
             ),
@@ -139,21 +147,20 @@ class _mainpageState extends State<mainpage> {
     );
   }
 
-  Future<void> QR() async {
-    await profileInfo();
-    setState(() {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => InitialQRGenerator(
-            qrData: user_id,
-            name: name,
-            initPage: false,
-          ),
-        ),
-      );
-    });
-  }
+  // Future<void> QR() async {
+  //   setState(() {
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //         builder: (_) => InitialQRGenerator(
+  //           qrData: user_id,
+  //           name: name,
+  //            false,
+  //         ),
+  //       ),
+  //     );
+  //   });
+  // }
 
   void ScanQR() {
     showCustomAlertDialog(context);
@@ -286,66 +293,12 @@ class _mainpageState extends State<mainpage> {
                 );
               },
             ),
-            Positioned(
-              bottom: 1,
-              child: FABcircularAnimation(),
+            Container(
+              color: Colors.amber,
             )
           ],
         ),
-        floatingActionButton: AddUserButton(
-          scan: ScanQR,
-          QR: QR,
-          search: search,
-        ),
       ),
-    );
-  }
-}
-
-class AddUserButton extends StatelessWidget {
-  AddUserButton({
-    Key? key,
-    required this.scan,
-    required this.search,
-    required this.QR,
-  }) : super(key: key);
-
-  final Function scan;
-  final Function QR;
-  final Function search;
-
-  @override
-  Widget build(BuildContext context) {
-    return SpeedDial(
-      animatedIcon: AnimatedIcons.list_view,
-      animatedIconTheme: IconThemeData(color: Colors.white),
-      iconTheme: IconThemeData(color: Colors.white),
-      backgroundColor: const Color.fromARGB(255, 255, 163, 163),
-      overlayColor: const Color.fromARGB(92, 0, 0, 0),
-      overlayOpacity: 0.4,
-      spaceBetweenChildren: 12,
-      gradientBoxShape: BoxShape.circle,
-      onOpen: () {},
-      children: [
-        SpeedDialChild(
-          onTap: () => search(),
-          child: Icon(Icons.search),
-          backgroundColor: Colors.white,
-          label: 'Search',
-        ),
-        SpeedDialChild(
-          onTap: () => scan(),
-          child: Icon(Icons.qr_code_scanner),
-          backgroundColor: const Color.fromARGB(255, 255, 163, 163),
-          label: 'Scan',
-        ),
-        SpeedDialChild(
-          onTap: () => QR(),
-          child: Icon(Icons.qr_code),
-          backgroundColor: Colors.white,
-          label: 'QR',
-        ),
-      ],
     );
   }
 }

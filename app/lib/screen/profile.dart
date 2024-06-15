@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:app/server/methods/logout.dart';
+import '../server/methods/logout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_editor_plus/image_editor_plus.dart';
@@ -11,7 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import '../main.dart';
 import 'auth/login.dart';
 import 'package:animate_do/animate_do.dart';
-import 'package:app/model/profile.dart';
+import '../model/profile.dart';
 
 class Profile_Info extends StatefulWidget {
   @override
@@ -208,7 +208,7 @@ class _Profile_InfoState extends State<Profile_Info> {
                                           ),
                                         ),
                                       ),
-                                      FadeInLeft(
+                                      FadeInRight(
                                         duration: Duration(milliseconds: 1900),
                                         child: Container(
                                           padding: EdgeInsets.all(8.0),
@@ -223,7 +223,7 @@ class _Profile_InfoState extends State<Profile_Info> {
                                           ),
                                         ),
                                       ),
-                                      FadeInRight(
+                                      FadeInLeft(
                                         duration: Duration(milliseconds: 1900),
                                         child: Container(
                                           padding: EdgeInsets.all(8.0),
@@ -281,7 +281,7 @@ class _Profile_InfoState extends State<Profile_Info> {
                             SizedBox(
                               height: 30,
                             ),
-                            FadeInRightBig(
+                            FadeInUp(
                               duration: Duration(milliseconds: 1900),
                               child: GestureDetector(
                                 onTap: () {

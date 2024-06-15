@@ -14,50 +14,72 @@ class OtherUser {
     required this.bio,
   });
 
-  // Serialize profile object to JSON string
-  String toJson() {
-    return json.encode({
+  // Serialize profile object to JSON map
+  Map<String, dynamic> toJson() {
+    return {
       'user_id': userId,
       'name': name,
       'profile_picture': image,
       'bio': bio,
-    });
+    };
   }
 
-  // Deserialize JSON string to profile object
-  factory OtherUser.fromJson(String jsonString) {
-    final Map<String, dynamic> data = json.decode(jsonString);
+  // Deserialize JSON map to profile object
+  factory OtherUser.fromJson(Map<String, dynamic> json) {
     return OtherUser(
-      userId: data['user_id'],
-      name: data['name'],
-      image: data['profile_picture'],
-      bio: data['bio'],
+      userId: json['user_id'],
+      name: json['name'],
+      image: json['profile_picture'],
+      bio: json['bio'],
     );
   }
 
-  // Save profile to secure storage
-  Future<void> save() async {
+  // Save list of profiles to secure storage
+  static Future<void> saveList(List<OtherUser> userList) async {
     final storage = FlutterSecureStorage();
-    await storage.write(key: 'UserContacts', value: toJson());
+    final List<Map<String, dynamic>> userJsonList = userList.map((user) => user.toJson()).toList();
+    final jsonString = json.encode(userJsonList);
+    await storage.write(key: 'UserContacts', value: jsonString);
   }
 
-  // Read profile from secure storage
-  static Future<OtherUser?> load() async {
+  // Read list of profiles from secure storage
+  static Future<List<OtherUser>> loadList() async {
     final storage = FlutterSecureStorage();
     final jsonString = await storage.read(key: 'UserContacts');
-    if (jsonString != null) {
-      return OtherUser.fromJson(jsonString);
+    if (jsonString != null && jsonString.isNotEmpty) {
+      final List<dynamic> jsonList = json.decode(jsonString);
+      return jsonList.map((json) => OtherUser.fromJson(json)).toList();
     }
-    return null;
+    return [];
+  }
+
+  // Add a user to the list and save it
+  static Future<void> addUser(OtherUser newUser) async {
+    final storage = FlutterSecureStorage();
+    final jsonString = await storage.read(key: 'UserContacts');
+    List<OtherUser> userList = [];
+
+    if (jsonString != null && jsonString.isNotEmpty) {
+      // If the list exists, load it
+      final List<dynamic> jsonList = json.decode(jsonString);
+      userList = jsonList.map((json) => OtherUser.fromJson(json)).toList();
+    }
+    userList.add(newUser);
+
+    // Save the updated list
+    await saveList(userList);
   }
 
   Future<void> updateField(String key, String value) async {
     final storage = FlutterSecureStorage();
     final jsonString = await storage.read(key: 'UserContacts');
     if (jsonString != null) {
-      Map<String, dynamic> data = json.decode(jsonString);
-      data[key] = value;
-      await storage.write(key: 'UserContacts', value: json.encode(data));
+      List<dynamic> jsonList = json.decode(jsonString);
+      final index = jsonList.indexWhere((userJson) => userJson['user_id'] == this.userId);
+      if (index != -1) {
+        jsonList[index][key] = value;
+        await storage.write(key: 'UserContacts', value: json.encode(jsonList));
+      }
     }
   }
 }

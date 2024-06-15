@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:animate_do/animate_do.dart';
-import 'package:app/model/ChatModel.dart';
-import 'package:app/model/profile.dart';
+import '../model/ChatModel.dart';
+import '../model/profile.dart';
 import 'package:flutter/widgets.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';

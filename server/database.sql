@@ -16,16 +16,15 @@ CREATE TABLE user_verification (
 CREATE TABLE devices (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255) REFERENCES Users(user_id),
-    device_id VARCHAR(120) UNIQUE NOT NULL,
+    device_id VARCHAR(120) NOT NULL,
     type VARCHAR(45),
-    device_token VARCHAR(120),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE access (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255) REFERENCES Users(user_id),
-    device_id INT REFERENCES devices(id),
+    device_id VARCHAR(255) REFERENCES devices(id),
     token VARCHAR(60) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP
@@ -45,8 +44,7 @@ CREATE TABLE contacts (
 CREATE TABLE user_contact (
     user_id VARCHAR(255)REFERENCES Users(user_id),
     contact_id VARCHAR(255) REFERENCES Users(user_id),
-    first_name VARCHAR(45),
-    last_name VARCHAR(45),
+    name VARCHAR(255),
     bio TEXT,
     profile_picture VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -1,14 +1,17 @@
 import 'dart:ui';
 
+import '../server/api/OtherUser.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shimmer/shimmer.dart';
 
-import 'package:app/model/OtherUser.dart'; // Assuming OtherUser.dart is defined in this path
+import '../model/OtherUser.dart'; // Assuming OtherUser.dart is defined in this path
 
 class UserSearchScreen extends StatefulWidget {
   @override
+  UserSearchScreen({required this.user_id});
+  String user_id;
   _UserSearchScreenState createState() => _UserSearchScreenState();
 }
 
@@ -17,7 +20,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
   List<OtherUser> _results = [];
   bool isLoaded = false;
   late Size mq;
-
+  OtherUserService _otherUserService = OtherUserService();
   @override
   void initState() {
     super.initState();
@@ -28,31 +31,51 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
     });
   }
 
-  Future<void> _searchUsers(String query) async {
+  Future<void> _searchUsers(String query, String currentUserId) async {
     if (query.isEmpty) {
       setState(() {
         _results = [];
       });
       return;
     }
-    final response =
-        await http.get(Uri.parse('http://10.0.2.2:3000/user/search/$query'));
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      setState(() {
-        _results = data
-            .map((user) => OtherUser(
-                  name: user['name'], // Access 'name' from user map
-                  userId: user['user_id'], // Access 'userId' from user map
-                  image:
-                      user['profile_picture'], // Access 'image' from user map
-                  bio: user['bio'], // Access 'bio' from user map
-                ))
-            .toList();
-      });
-    } else {
-      throw Exception('Failed to load users');
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:3000/user/search'),
+        headers: {
+          'name': query,
+          'id': currentUserId, // Replace with the current user's ID
+        },
+      );
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        // print(response.body);
+        setState(() async {
+          _results = await data
+              .map((user) => OtherUser(
+                    name: user['name'], // Access 'name' from user map
+                    userId: user['user_id'], // Access 'user_id' from user map
+                    image: user[
+                        'profile_picture'], // Access 'profile_picture' from user map
+                    bio: user['bio'], // Access 'bio' from user map
+                  ))
+              .toList();
+        });
+        print(data.length);
+      } else {
+        throw Exception('Failed to load users');
+      }
+    } catch (e) {
+      print('Error searching users: $e');
+      // Handle error
     }
+  }
+
+  Future<void> _ConnectWithUser(OtherUser user) async {
+    await OtherUser.addUser(user);
+    List<OtherUser> loadedList = await OtherUser.loadList();
+    String response = await _otherUserService.saveUser(user, widget.user_id);
+    print(loadedList.length);
+    print(response);
   }
 
   void _showUserDetailsModal(OtherUser user) {
@@ -99,7 +122,6 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        // Handle connect action
                         Navigator.pop(context); // Close the modal
                       },
                       child: Text(
@@ -113,8 +135,8 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.greenAccent),
                       onPressed: () {
-                        Navigator.pop(context);
-                        // Close the modal
+                        _ConnectWithUser(user);
+                        Navigator.pop(context); // Close the modal
                       },
                       child: Text('Connect',
                           style: TextStyle(color: Colors.white)),
@@ -149,7 +171,7 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
               Container(
                 child: TextField(
                   onChanged: (value) {
-                    _searchUsers(value);
+                    _searchUsers(value, widget.user_id);
                   },
                   decoration: InputDecoration(
                     hintText: 'Search users',
@@ -157,14 +179,14 @@ class _UserSearchScreenState extends State<UserSearchScreen> {
                       icon: Icon(Icons.close),
                       onPressed: () {
                         _controller.clear();
-                        _searchUsers('');
+                        _searchUsers('', widget.user_id);
                       },
                     ),
                   ),
                   controller: _controller,
                 ),
               ),
-              (_results != null && isLoaded)
+              (isLoaded)
                   ? ListView.builder(
                       shrinkWrap: true,
                       itemCount: _results.length,

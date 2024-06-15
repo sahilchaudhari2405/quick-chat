@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:app/model/device.dart';
-import 'package:app/model/profile.dart';
-import 'package:app/server/api/device_api.dart';
-import 'package:app/server/methods/refreshToken.dart';
+import '../../model/device.dart';
+import '../../model/profile.dart';
+import '../api/device_api.dart';
+import 'refreshToken.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 

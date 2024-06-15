@@ -1,4 +1,4 @@
- import 'package:app/model/ChatModel.dart';
+ import '../../model/ChatModel.dart';
 
 List<ChatModel> chatData = [
     ChatModel(
