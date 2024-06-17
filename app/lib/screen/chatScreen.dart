@@ -29,7 +29,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void connectToServer() {
-    socket = IO.io('http://10.0.2.2:3000', <String, dynamic>{
+    socket = IO.io('http://10.0.2.2:9000', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
@@ -46,11 +46,11 @@ class _ChatPageState extends State<ChatPage> {
       });
     });
 
-    socket!.on('chat message', (msg) {
-      setState(() {
-        messages.add(msg);
-      });
-    });
+    // socket!.on('chat message', (msg) {
+    //   setState(() {
+    //     messages.add(msg);
+    //   });
+    // });
     socket!.emit('SignIn', widget.UserInfo.id);
     socket!.on('disconnect', (_) => print('disconnected'));
   }
