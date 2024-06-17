@@ -306,10 +306,7 @@ class _mainpageState extends State<mainpage> {
                 }
               },
             ),
-            Positioned(
-              bottom: 1,
-              child: CircularProgressIndicator(),
-            )
+            CircularProgressIndicator()
           ],
         ),
         floatingActionButton: AddUserButton(

@@ -46,11 +46,11 @@ class _ChatPageState extends State<ChatPage> {
       });
     });
 
-    // socket!.on('chat message', (msg) {
-    //   setState(() {
-    //     messages.add(msg);
-    //   });
-    // });
+    socket!.on('chat message', (msg) {
+      setState(() {
+        messages.add(msg);
+      });
+    });
     socket!.emit('SignIn', widget.UserInfo.id);
     socket!.on('disconnect', (_) => print('disconnected'));
   }

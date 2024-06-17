@@ -1,9 +1,8 @@
 CREATE TABLE Users (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255) UNIQUE NOT NULL,
-    first_name VARCHAR(20),
-    last_name VARCHAR(20),
-    email VARCHAR(255),
+    email VARCHAR(255)
+    password VARCHAR(255)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -33,7 +32,6 @@ CREATE TABLE contacts (
     id SERIAL PRIMARY KEY,
     user_id VARCHAR(255) REFERENCES Users(user_id),
     email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
     user_name VARCHAR(20),
     bio TEXT,
     profile_picture VARCHAR(255),
