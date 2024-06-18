@@ -1,3 +1,10 @@
+import 'dart:convert';
+
+import 'package:app/screen/CameraScreen.dart';
+import 'package:app/screen/CameraView.dart';
+import 'package:app/screen/gallary.dart';
+import 'package:image_editor_plus/image_editor_plus.dart';
+
 import '../main.dart';
 import '../model/ChatModel.dart';
 import '../model/messageModel.dart';
@@ -6,6 +13,10 @@ import '../widget/replySmsCard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 class ChatPage extends StatefulWidget {
   ChatPage({required this.contact, required this.UserInfo});
@@ -17,6 +28,8 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   IO.Socket? socket;
+  File? _image;
+
   List<Messagemodel> messages = [];
   ScrollController _scrollController = ScrollController();
   TextEditingController _controller = TextEditingController();
@@ -26,6 +39,35 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
     connectToServer();
+  }
+
+  Future<void> SendToServer(List<MassageWithData> data) async {
+    List<MassageWithData>? finalImage = data;
+
+    if (finalImage != null && finalImage!.isNotEmpty) {
+      for (MassageWithData pickedFile in finalImage!) {
+        File imageFile = File(pickedFile.data.path);
+        List<int> imageBytes = await imageFile.readAsBytes();
+        String base64Image = base64Encode(imageBytes);
+
+        sendMessageData(pickedFile.message, widget.UserInfo.id,
+            widget.contact.id, base64Image, pickedFile.type, pickedFile.time);
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final List<XFile>? selectedImages = await ImagePicker().pickMultiImage();
+
+    if (selectedImages != null) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => GallaryViewPicture(
+                    images: selectedImages,
+                    onDataReceived: SendToServer,
+                  )));
+    }
   }
 
   void connectToServer() {
@@ -44,6 +86,14 @@ class _ChatPageState extends State<ChatPage> {
         _scrollController.animateTo(_scrollController.position.maxScrollExtent,
             duration: Duration(milliseconds: 300), curve: Curves.easeOut);
       });
+      socket!.on('messageWithdata', (data) {
+        // Handle incoming private message
+        print('Received message: ${data}');
+        // Update UI with new message
+        setState(() {
+          // Implement UI update logic here
+        });
+      });
     });
 
     // socket!.on('chat message', (msg) {
@@ -60,6 +110,18 @@ class _ChatPageState extends State<ChatPage> {
     socket!.emit(
         'message', {"message": message, "SourceId": s, "targetId": targetId});
   }
+
+  void sendMessageData(String message, int s, int targetId, String image,
+      String type, String time) {
+    socket!.emit('messageWithdata', {
+      "message": message,
+      "data": image,
+      "type": type,
+      "time": time,
+      "SourceId": s,
+      "targetId": targetId
+    });
+  } 
 
   void setMessage(String type, String Message) {
     Messagemodel messagemodel = Messagemodel(
@@ -258,11 +320,19 @@ class _ChatPageState extends State<ChatPage> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            _pickImage();
+                                          },
                                           icon: Icon(Icons.attach_file),
                                         ),
                                         IconButton(
-                                          onPressed: () {},
+                                          onPressed: () {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (_) =>
+                                                        CameraScreen()));
+                                          },
                                           icon: Icon(Icons.camera_alt),
                                         )
                                       ],

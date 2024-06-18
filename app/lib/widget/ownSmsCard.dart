@@ -3,8 +3,9 @@ import '../model/messageModel.dart';
 import 'package:flutter/material.dart';
 
 class Ownsmscard extends StatefulWidget {
-  Ownsmscard({required this.message,required this.time});
+  Ownsmscard({required this.message, required this.time});
   Messagemodel message;
+
   String time;
   @override
   State<Ownsmscard> createState() => _OwnsmscardState();
