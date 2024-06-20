@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:app/model/messageModel.dart';
 import 'package:app/screen/chatScreen.dart';
+import 'package:app/server/methods/saveImageLocally.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:pro_image_editor/pro_image_editor.dart';
@@ -12,7 +13,7 @@ class GallaryViewPicture extends StatefulWidget {
   final List<XFile> images;
 
   GallaryViewPicture({required this.images, required this.onDataReceived});
-  final Function(List<MassageWithData>) onDataReceived;
+  final Function(List<Messagemodel>) onDataReceived;
   @override
   State<GallaryViewPicture> createState() => _GallaryViewPictureState();
 }
@@ -20,7 +21,7 @@ class GallaryViewPicture extends StatefulWidget {
 class _GallaryViewPictureState extends State<GallaryViewPicture> {
   int selectedIndex = 0;
   PageController _pageController = PageController();
-
+  TextEditingController _controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,6 +119,7 @@ class _GallaryViewPictureState extends State<GallaryViewPicture> {
                 width: MediaQuery.of(context).size.width,
                 padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
                 child: TextFormField(
+                  controller: _controller,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 17,
@@ -137,14 +139,18 @@ class _GallaryViewPictureState extends State<GallaryViewPicture> {
                       fontSize: 17,
                     ),
                     suffixIcon: GestureDetector(
-                      onTap: () {
-                        List<MassageWithData> data = [];
+                      onTap: () async {
+                        List<Messagemodel> data = [];
                         for (XFile it in widget.images) {
-                          data.add(MassageWithData(
-                              message: 'sahil',
-                              data: it,
+                          String path = await ImageStore()
+                              .saveImageLocally(File(it.path));
+                          data.add(Messagemodel(
+                              message: _controller.text,
+                              data: path,
+                              way: "source",
                               type: 'images',
-                              time: '22.00'));
+                              time:
+                                  DateTime.now().toString().substring(10, 16)));
                         }
                         setState(() {
                           widget.onDataReceived(data);

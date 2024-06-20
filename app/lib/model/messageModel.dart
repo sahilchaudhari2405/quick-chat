@@ -1,20 +1,15 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 class Messagemodel {
   String type;
   String message;
+  String data; // Optional field for image data
   String time;
-  Messagemodel({required this.type, required this.message, required this.time});
-}
+  String way;
 
-class MassageWithData {
-  String message;
-  dynamic data;
-  String type;
-  String time;
-  MassageWithData({
-    required this.message,
-    required this.data,
+  Messagemodel({
     required this.type,
+    required this.message,
     required this.time,
+    required this.way,
+    this.data = '',
   });
 }
